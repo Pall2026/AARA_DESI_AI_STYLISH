@@ -1,0 +1,7 @@
+{
+  "name": "Aara: Your AI Stylist",
+  "description": "An AI-powered fashion stylist that provides personalized outfit recommendations, color analysis, and accessory pairings, with a focus on Indian and desi clothing. Users can upload their photo or create an AI model for a private and customized virtual try-on experience.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
