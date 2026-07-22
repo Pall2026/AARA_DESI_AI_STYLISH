@@ -360,7 +360,7 @@ const { reasoning, chosenOutfitIndex, advice } =
 };
 
 export const generateJewelleryAdvice = async (request: JewelleryStyleRequest): Promise<StyleResult> => {
- const res = await fetch("/api/gemini", {
+const res = await fetch("/api/gemini", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
@@ -368,13 +368,25 @@ export const generateJewelleryAdvice = async (request: JewelleryStyleRequest): P
   body: JSON.stringify({
     model: "gemini-3.5-flash",
     contents: {
-      parts: [{
-        text: `STRICT ADHERENCE REQUIRED: Choose the best jewellery from the options for the provided outfit for ${request.occasion} at ${request.venue} during ${request.timeOfDay}.`
-      }]
+      parts: [
+        {
+          text: `STRICT ADHERENCE REQUIRED: Choose the best jewellery from the options for the provided outfit for ${request.occasion} at ${request.venue} during ${request.timeOfDay}.
+
+Guidelines for the advice:
+- outfitPairing: Focus ONLY on what else to pair with this outfit and jewellery.
+- makeupIdeas: Provide specific makeup suggestions.
+- accessories: Suggest footwear and a bag (jewelry is already chosen).
+- hairstyles: Suggest 2-3 hairstyle options.
+- finalLookDescription: A cohesive summary of the entire look.`
+        },
+        fileToGenerativePart(request.userOutfitImage),
+        ...request.jewelleryOptions.map(fileToGenerativePart),
+      ],
     },
     config: {
-      // Keep your existing config exactly as it is.
-    }
+      responseMimeType: "application/json",
+      responseSchema: jewelleryChoiceSchema,
+    },
   }),
 });
 
@@ -383,15 +395,9 @@ if (!res.ok) {
 }
 
 const response = await res.json();
-    Guidelines for the advice:
-    - outfitPairing: Focus ONLY on what else to pair with this outfit and jewellery.
-    - makeupIdeas: Provide specific makeup suggestions.
-    - accessories: Suggest footwear and a bag (jewelry is already chosen).
-    - hairstyles: Suggest 2-3 hairstyle options.
-    - finalLookDescription: A cohesive summary of the entire look.` }, fileToGenerativePart(request.userOutfitImage), ...request.jewelleryOptions.map(fileToGenerativePart)] },
-    config: { responseMimeType: "application/json", responseSchema: jewelleryChoiceSchema }
-  });
-  const { reasoning, chosenJewelleryIndex, advice } = JSON.parse(response.text || '{}');
+
+const { reasoning, chosenJewelleryIndex, advice } =
+  JSON.parse(response.text || "{}");
   
   const promptParts: any[] = [];
   const imagePrompt = `STRICT ADHERENCE REQUIRED: Generate a photorealistic, full-body portrait of a person wearing the outfit from the first image and the EXACT jewellery from the second image. The final image MUST show the entire person from head to toe, with their full legs and appropriate matching footwear fully visible. 
