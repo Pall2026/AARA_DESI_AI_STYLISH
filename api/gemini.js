@@ -20,7 +20,10 @@ export default async function handler(req, res) {
       config,
     });
 
-    return res.status(200).json(response);
+ return res.status(200).json({
+  text: response.text,
+  candidates: response.candidates,
+});
 
   } catch (error) {
     console.error(error);
