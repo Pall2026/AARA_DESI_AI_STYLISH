@@ -158,23 +158,43 @@ export const analyzeFaceFeatures = async (
   return JSON.parse(response.text || "{}") as ModelDescription;
 };
 
-const generateImageFromPrompt = async (promptParts: any[]): Promise<string | null> => {
-    try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-3.1-flash-lite-image',
-            contents: { parts: promptParts }
-        });
-        const part = response.candidates?.[0]?.content?.parts.find(p => p.inlineData);
-        if (part?.inlineData) {
-            return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
-        }
-        return null;
-    } catch (error) {
-        console.error("Image generation failed:", error);
-        return null;
-    }
-};
+const generateImageFromPrompt = async (
+  promptParts: any[]
+): Promise<string | null> => {
+  try {
+    const res = await fetch("/api/gemini", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gemini-3.1-flash-lite-image",
+        contents: {
+          parts: promptParts,
+        },
+      }),
+    });
 
+    if (!res.ok) {
+      throw new Error("Image generation failed");
+    }
+
+    const response = await res.json();
+
+    const part = response.candidates?.[0]?.content?.parts?.find(
+      (p: any) => p.inlineData
+    );
+
+    if (part?.inlineData) {
+      return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Image generation failed:", error);
+    return null;
+  }
+};
 export const generateStyleAdviceAndImage = async (request: StyleRequest): Promise<StyleResult> => {
   const res = await fetch("/api/gemini", {
   method: "POST",
