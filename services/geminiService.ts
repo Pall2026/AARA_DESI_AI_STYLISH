@@ -218,7 +218,7 @@ export const generateStyleAdviceAndImage = async (request: StyleRequest): Promis
 });
 
 const response = await res.json();
-  const advice = JSON.parse(adviceResponse.text || '{}');
+const advice = JSON.parse(response.text || "{}");
   
   const promptParts: any[] = [];
   let imagePrompt = '';
