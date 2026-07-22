@@ -176,11 +176,28 @@ const generateImageFromPrompt = async (promptParts: any[]): Promise<string | nul
 };
 
 export const generateStyleAdviceAndImage = async (request: StyleRequest): Promise<StyleResult> => {
-  const adviceResponse = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: { parts: [{ text: buildStylePrompt(request) }] },
-      config: { responseMimeType: "application/json", responseSchema: styleAdviceSchema }
-  });
+  const res = await fetch("/api/gemini", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    model: "gemini-3.5-flash",
+    contents: {
+      parts: [
+        {
+          text: `STRICT ADHERENCE REQUIRED: Choose the best outfit for ${request.occasion} at ${request.venue} during ${request.timeOfDay}.
+          ...`
+        }
+      ]
+    },
+    config: {
+      // keep your existing config exactly as it is
+    }
+  })
+});
+
+const response = await res.json();
   const advice = JSON.parse(adviceResponse.text || '{}');
   
   const promptParts: any[] = [];
