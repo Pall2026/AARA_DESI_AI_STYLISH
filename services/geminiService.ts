@@ -125,13 +125,37 @@ const buildStylePrompt = (request: StyleRequest) => {
    Core model functions
    --------------------- */
 
-export const analyzeFaceFeatures = async (image: ImageFile): Promise<ModelDescription> => {
-  const response = await ai.models.generateContent({
-    model: "gemini-3.5-flash",
-    contents: { parts: [{ text: buildFaceAnalysisPrompt() }, fileToGenerativePart(image)] },
-    config: { responseMimeType: "application/json", responseSchema: faceAnalysisSchema }
+export const analyzeFaceFeatures = async (
+  image: ImageFile
+): Promise<ModelDescription> => {
+
+  const res = await fetch("/api/gemini", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "gemini-3.5-flash",
+      contents: {
+        parts: [
+          { text: buildFaceAnalysisPrompt() },
+          fileToGenerativePart(image),
+        ],
+      },
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: faceAnalysisSchema,
+      },
+    }),
   });
-  return JSON.parse(response.text || '{}') as ModelDescription;
+
+  if (!res.ok) {
+    throw new Error("Face analysis failed");
+  }
+
+  const response = await res.json();
+
+  return JSON.parse(response.text || "{}") as ModelDescription;
 };
 
 const generateImageFromPrompt = async (promptParts: any[]): Promise<string | null> => {
