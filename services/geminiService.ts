@@ -303,19 +303,43 @@ const response = await res.json();
 };
 
 export const generateOccasionStyleAdvice = async (request: OccasionStyleRequest): Promise<StyleResult> => {
-  const response = await ai.models.generateContent({
+ const res = await fetch("/api/gemini", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
     model: "gemini-3.5-flash",
-    contents: { parts: [{ text: `STRICT ADHERENCE REQUIRED: Choose the best outfit for ${request.occasion} at ${request.venue} during ${request.timeOfDay}.
-    
-    Guidelines for the advice:
-    - outfitPairing: Focus ONLY on what to pair with the chosen outfit.
-    - makeupIdeas: Provide specific makeup suggestions.
-    - accessories: Suggest jewelry, footwear, and a bag.
-    - hairstyles: Suggest 2-3 hairstyle options.
-    - finalLookDescription: A cohesive summary of the entire look.` }, ...request.clothingImages.map(fileToGenerativePart)] },
-    config: { responseMimeType: "application/json", responseSchema: occasionChoiceSchema }
-  });
-  const { reasoning, chosenOutfitIndex, advice } = JSON.parse(response.text || '{}');
+    contents: {
+      parts: [
+        {
+          text: `STRICT ADHERENCE REQUIRED: Choose the best outfit for ${request.occasion} at ${request.venue} during ${request.timeOfDay}.
+
+        Guidelines for the advice:
+        - outfitPairing: Focus ONLY on what to pair with the chosen outfit.
+        - makeupIdeas: Provide specific makeup suggestions.
+        - accessories: Suggest jewelry, footwear, and a bag.
+        - hairstyles: Suggest 2-3 hairstyle options.
+        - finalLookDescription: A cohesive summary of the entire look.`
+        },
+        ...request.clothingImages.map(fileToGenerativePart),
+      ],
+    },
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: occasionChoiceSchema,
+    },
+  }),
+});
+
+if (!res.ok) {
+  throw new Error("Occasion style advice failed");
+}
+
+const response = await res.json();
+
+const { reasoning, chosenOutfitIndex, advice } =
+  JSON.parse(response.text || "{}");
   
   const promptParts: any[] = [];
   const imagePrompt = `STRICT ADHERENCE REQUIRED: Generate a photorealistic, full-body portrait of a person wearing the EXACT outfit shown in the provided clothing image. The final image MUST show the entire person from head to toe, with their full legs and appropriate matching footwear fully visible.
