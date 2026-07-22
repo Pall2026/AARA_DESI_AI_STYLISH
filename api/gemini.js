@@ -5,35 +5,28 @@ const ai = new GoogleGenAI({
 });
 
 export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({
+      error: "Method not allowed",
+    });
+  }
+
   try {
-    if (req.method !== "POST") {
-      return res.status(405).json({
-        error: "Method not allowed",
-      });
-    }
-
-    const { prompt } = req.body;
-
-    if (!prompt) {
-      return res.status(400).json({
-        error: "Prompt is required",
-      });
-    }
+    const { model, contents, config } = req.body;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
+      model,
+      contents,
+      config,
     });
 
-    return res.status(200).json({
-      text: response.text,
-    });
+    return res.status(200).json(response);
 
   } catch (error) {
     console.error(error);
 
     return res.status(500).json({
-      error: "Something went wrong",
+      error: error.message || "Something went wrong",
     });
   }
 }
