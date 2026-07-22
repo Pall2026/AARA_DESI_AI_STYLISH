@@ -316,10 +316,29 @@ export const generateOccasionStyleAdvice = async (request: OccasionStyleRequest)
 };
 
 export const generateJewelleryAdvice = async (request: JewelleryStyleRequest): Promise<StyleResult> => {
-  const response = await ai.models.generateContent({
+ const res = await fetch("/api/gemini", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
     model: "gemini-3.5-flash",
-    contents: { parts: [{ text: `STRICT ADHERENCE REQUIRED: Choose the best jewellery from the options for the provided outfit for ${request.occasion} at ${request.venue} during ${request.timeOfDay}.
-    
+    contents: {
+      parts: [{
+        text: `STRICT ADHERENCE REQUIRED: Choose the best jewellery from the options for the provided outfit for ${request.occasion} at ${request.venue} during ${request.timeOfDay}.`
+      }]
+    },
+    config: {
+      // Keep your existing config exactly as it is.
+    }
+  }),
+});
+
+if (!res.ok) {
+  throw new Error("Jewellery advice failed");
+}
+
+const response = await res.json();
     Guidelines for the advice:
     - outfitPairing: Focus ONLY on what else to pair with this outfit and jewellery.
     - makeupIdeas: Provide specific makeup suggestions.
